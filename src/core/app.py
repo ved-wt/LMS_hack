@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.core.config import get_settings
 from src.core.db import close_db, init_db
 from src.core.errors import register_error_handlers
+from src.core.scheduler import start_scheduler, stop_scheduler
 
 
 @asynccontextmanager
@@ -18,7 +19,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     Handles:
     - Database initialization on startup
+    - Background scheduler startup
     - Connection cleanup on shutdown
+    - Scheduler shutdown
 
     Args:
         app: FastAPI application instance
@@ -30,9 +33,15 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     init_db()
     print("✓ Database initialized")
 
+    start_scheduler()
+    print("✓ Background scheduler started")
+
     yield
 
     # Shutdown
+    stop_scheduler()
+    print("✓ Background scheduler stopped")
+
     await close_db()
     print("✓ Database connections closed")
 
@@ -88,8 +97,6 @@ def include_routers(app: FastAPI) -> None:
     Args:
         app: FastAPI application instance
     """
-    # TODO: Add routers as they are implemented
-    # from src.api.routes import health, auth, users, trainings, ...
 
     # Health check endpoint (inline for now)
     @app.get("/api/health", tags=["health"])
@@ -100,8 +107,39 @@ def include_routers(app: FastAPI) -> None:
             "version": get_settings().APP_VERSION,
         }
 
-    # Router imports and inclusion will be added here:
-    # app.include_router(health.router, prefix="/api", tags=["health"])
-    # app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-    # app.include_router(users.router, prefix="/api/users", tags=["users"])
-    # etc.
+    # Domain routers
+    from src.api.routes import (
+        auth,
+        users,
+        profiles,
+        trainings,
+        enrollments,
+        notifications,
+        departments,
+        certifications,
+        sessions,
+        attendance,
+        manager,
+        completions,
+        badges,
+        reports,
+    )
+
+    app.include_router(auth.router, prefix="/api")
+    app.include_router(users.router, prefix="/api")
+    app.include_router(profiles.router, prefix="/api")
+    app.include_router(trainings.router, prefix="/api")
+    app.include_router(enrollments.router, prefix="/api")
+    app.include_router(notifications.router, prefix="/api")
+    app.include_router(departments.router, prefix="/api")
+    app.include_router(certifications.router, prefix="/api")
+    app.include_router(sessions.router, prefix="/api")
+    app.include_router(attendance.router, prefix="/api")
+    app.include_router(manager.router, prefix="/api")
+    app.include_router(completions.router, prefix="/api")
+    app.include_router(badges.router, prefix="/api")
+    app.include_router(reports.router, prefix="/api")
+
+
+# Create app instance
+app = create_app()

@@ -5,8 +5,8 @@ from typing import AsyncGenerator
 
 from sqlalchemy import DateTime, func
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
-from sqlalchemy.orm import Mapped, mapped_column, sessionmaker
-from sqlmodel import SQLModel
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import Field, SQLModel
 
 from src.core.config import get_settings
 
@@ -14,16 +14,13 @@ from src.core.config import get_settings
 class TimestampMixin:
     """Mixin for automatic created_at and updated_at timestamps."""
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False,
+    created_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"server_default": func.now()},
     )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False,
+    updated_at: datetime = Field(
+        default_factory=datetime.utcnow,
+        sa_column_kwargs={"server_default": func.now(), "onupdate": func.now()},
     )
 
 

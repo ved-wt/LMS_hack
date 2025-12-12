@@ -1,15 +1,21 @@
 """Alembic migration environment configuration."""
 
 import asyncio
+import sys
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 from src.core.config import get_settings
 from src.core.db import get_db_metadata
+from src.models import *  # noqa: F403 - Import all models for Alembic autogenerate
 
 # Alembic Config object
 config = context.config
