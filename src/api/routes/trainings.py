@@ -11,32 +11,57 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.core.db import get_session
 from src.core.notifications import notify_training_approved, notify_training_rejected
 from src.models.training import Training, TrainingStatus
+from src.api.deps.auth import get_current_user
+from src.models.user import User, UserRole
 
 router = APIRouter(prefix="/trainings", tags=["trainings"])
 
 
+from pydantic import BaseModel
+
+class TrainingCreate(BaseModel):
+    title: str
+    description: str
+    category: str
+    duration_hours: float
+    max_participants: int
+    is_mandatory: bool = False
+
+class TrainingUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    category: str | None = None
+    duration_hours: float | None = None
+    max_participants: int | None = None
+    is_mandatory: bool | None = None
+
 @router.post("")
 async def create_training(
-    title: str,
-    description: str,
-    category: str,
-    duration_hours: float,
-    max_participants: int,
+    training_in: TrainingCreate,
     session: Annotated[AsyncSession, Depends(get_session)],
-    created_by_id: UUID | None = None,
-    is_mandatory: bool = False,
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     "Create a new training."
-    # created_by_id is None for now - will come from JWT later
+    status = TrainingStatus.DRAFT
+    approved_by_id = None
+    approved_at = None
+
+    if current_user.role == UserRole.SUPER_ADMIN:
+        status = TrainingStatus.APPROVED
+        approved_by_id = current_user.id
+        approved_at = datetime.utcnow()
+
     training = Training(
-        title=title,
-        description=description,
-        category=category,
-        duration_hours=duration_hours,
-        max_participants=max_participants,
-        is_mandatory=is_mandatory,
-        created_by_id=created_by_id,
-        status=TrainingStatus.DRAFT,
+        title=training_in.title,
+        description=training_in.description,
+        category=training_in.category,
+        duration_hours=training_in.duration_hours,
+        max_participants=training_in.max_participants,
+        is_mandatory=training_in.is_mandatory,
+        created_by_id=current_user.id,
+        status=status,
+        approved_by_id=approved_by_id,
+        approved_at=approved_at,
     )
     session.add(training)
     await session.commit()
@@ -62,13 +87,44 @@ async def get_training(
     training_id: UUID,
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
-    """Get training by ID."""
+    """Get training by ID with modules and lessons."""
     training = await session.get(Training, training_id)
     if not training:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Training not found",
         )
+
+    # Fetch modules
+    from src.models.content import Module, Lesson
+    modules_query = select(Module).where(Module.training_id == training_id).order_by(Module.order)
+    result = await session.execute(modules_query)
+    modules = result.scalars().all()
+
+    modules_data = []
+    for module in modules:
+        # Fetch lessons for each module
+        lessons_query = select(Lesson).where(Lesson.module_id == module.id).order_by(Lesson.order)
+        l_result = await session.execute(lessons_query)
+        lessons = l_result.scalars().all()
+        
+        modules_data.append({
+            "id": str(module.id),
+            "title": module.title,
+            "order": module.order,
+            "lessons": [
+                {
+                    "id": str(l.id),
+                    "title": l.title,
+                    "type": l.type.value,
+                    "duration_minutes": l.duration_minutes,
+                    "content_url": l.content_url,
+                    "content_text": l.content_text,
+                    "questions": l.questions,
+                    "order": l.order
+                } for l in lessons
+            ]
+        })
 
     return {
         "id": str(training.id),
@@ -81,7 +137,9 @@ async def get_training(
         "status": training.status.value,
         "prerequisites": training.prerequisites,
         "learning_objectives": training.learning_objectives,
-        "created_by_id": str(training.created_by_id),
+        "created_by_id": str(training.created_by_id) if training.created_by_id else None,
+        "image": training.materials_url, # Using materials_url as image for now
+        "modules": modules_data
     }
 
 
@@ -116,15 +174,11 @@ async def list_trainings(
         "total": len(trainings),
     }
 
-
 @router.put("/{training_id}")
 async def update_training(
     training_id: UUID,
+    training_update: TrainingUpdate,
     session: Annotated[AsyncSession, Depends(get_session)],
-    title: str | None = None,
-    description: str | None = None,
-    category: str | None = None,
-    duration_hours: float | None = None,
 ):
     """Update a training."""
     training = await session.get(Training, training_id)
@@ -134,14 +188,18 @@ async def update_training(
             detail="Training not found",
         )
 
-    if title is not None:
-        training.title = title
-    if description is not None:
-        training.description = description
-    if category is not None:
-        training.category = category
-    if duration_hours is not None:
-        training.duration_hours = duration_hours
+    if training_update.title is not None:
+        training.title = training_update.title
+    if training_update.description is not None:
+        training.description = training_update.description
+    if training_update.category is not None:
+        training.category = training_update.category
+    if training_update.duration_hours is not None:
+        training.duration_hours = training_update.duration_hours
+    if training_update.max_participants is not None:
+        training.max_participants = training_update.max_participants
+    if training_update.is_mandatory is not None:
+        training.is_mandatory = training_update.is_mandatory
 
     await session.commit()
     await session.refresh(training)
@@ -152,8 +210,31 @@ async def update_training(
         "description": training.description,
         "category": training.category,
         "duration_hours": training.duration_hours,
+        "max_participants": training.max_participants,
+        "is_mandatory": training.is_mandatory,
         "status": training.status.value,
     }
+
+
+@router.delete("/{training_id}")
+async def delete_training(
+    training_id: UUID,
+    session: Annotated[AsyncSession, Depends(get_session)],
+):
+    """Delete a training."""
+    training = await session.get(Training, training_id)
+    if not training:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Training not found",
+        )
+
+    # TODO: Check if there are active enrollments and prevent delete or cascade?
+    # For now, just delete.
+    await session.delete(training)
+    await session.commit()
+
+    return {"message": "Training deleted successfully", "id": str(training_id)}
 
 
 # Approval workflow endpoints
@@ -192,9 +273,10 @@ async def submit_training_for_approval(
 async def approve_training(
     training_id: UUID,
     session: Annotated[AsyncSession, Depends(get_session)],
-    approved_by_id: UUID | None = None,
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
-    """Approve training (admin/super_admin only - auth disabled for now)."""
+    """Approve training (admin/super_admin only)."""
+    # TODO: Check role
     training = await session.get(Training, training_id)
     if not training:
         raise HTTPException(
@@ -209,7 +291,7 @@ async def approve_training(
         )
 
     training.status = TrainingStatus.APPROVED
-    training.approved_by_id = approved_by_id
+    training.approved_by_id = current_user.id
     training.approved_at = datetime.utcnow()
     training.rejection_reason = None
 
@@ -238,9 +320,10 @@ async def reject_training(
     training_id: UUID,
     rejection_reason: str,
     session: Annotated[AsyncSession, Depends(get_session)],
-    rejected_by_id: UUID | None = None,
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
-    """Reject training with reason (admin/super_admin only - auth disabled for now)."""
+    """Reject training with reason (admin/super_admin only)."""
+    # TODO: Check role
     training = await session.get(Training, training_id)
     if not training:
         raise HTTPException(

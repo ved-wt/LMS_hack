@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>L&D Horizon</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // Mapping "Slate" to the Navy/Grey/Blue palette from the image
+              slate: {
+                50: '#F5F6F8',  // Very light grey/blue mix
+                100: '#D4D7E0', // Palette Light Grey
+                200: '#BCC4D4',
+                300: '#9DA8C0',
+                400: '#7E8CA8',
+                500: '#445377', // Palette Muted Blue (Secondary Text)
+                600: '#364260',
+                700: '#25304B',
+                800: '#1A2D58', // Palette Navy
+                900: '#0A2246', // Palette Dark Navy (Primary Brand)
+                950: '#051123',
+              },
+              // Mapping "Indigo" to the Orange palette from the image (Primary Action)
+              indigo: {
+                50: '#FFF2EB',
+                100: '#FFDFC2',
+                200: '#FFC099',
+                300: '#FFA070',
+                400: '#FF8147',
+                500: '#FF540A', // Palette Orange (Primary Action)
+                600: '#E64400', // Hover state
+                700: '#CC3600',
+                800: '#B32800',
+                900: '#8F2000',
+                950: '#4D1100',
+              },
+              primary: '#FF540A', // Explicit Primary
+              secondary: '#0A2246', // Explicit Secondary
+              success: '#10b981', // Emerald 500
+              warning: '#f59e0b', // Amber 500
+              danger: '#ef4444', // Red 500
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F5F6F8; /* Matches slate-50 */
+      }
+      /* Custom scrollbar for chat */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.10.1",
+    "@google/genai": "https://esm.sh/@google/genai@^1.33.0",
+    "recharts": "https://esm.sh/recharts@^3.5.1",
+    "lucide-react": "https://esm.sh/lucide-react@^0.560.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

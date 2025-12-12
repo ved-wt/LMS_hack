@@ -10,6 +10,8 @@ from src.models.attendance import Attendance, AttendanceStatus
 from src.models.completion import TrainingCompletion
 from src.models.badge import Badge, BadgeType
 from src.models.notification import Notification, NotificationType
+from src.models.content import Module, Lesson
+from src.models.progress import LessonProgress
 
 __all__ = [
     "User",
@@ -29,4 +31,7 @@ __all__ = [
     "BadgeType",
     "Notification",
     "NotificationType",
+    "Module",
+    "Lesson",
+    "LessonProgress",
 ]

@@ -11,6 +11,8 @@ from src.core.db import get_session
 from src.core.notifications import notify_enrollment_confirmed
 from src.models.enrollment import Enrollment, EnrollmentStatus
 from src.models.training import Training
+from src.api.deps.auth import get_current_user
+from src.models.user import User
 
 router = APIRouter(prefix="/enrollments", tags=["enrollments"])
 
@@ -18,10 +20,11 @@ router = APIRouter(prefix="/enrollments", tags=["enrollments"])
 @router.post("")
 async def enroll_in_training(
     training_id: UUID,
-    user_id: UUID,
     session: Annotated[AsyncSession, Depends(get_session)],
+    current_user: Annotated[User, Depends(get_current_user)],
 ):
     """Enroll user in a training."""
+    user_id = current_user.id
     # Check if training exists
     training = await session.get(Training, training_id)
     if not training:
@@ -77,23 +80,27 @@ async def get_user_enrollments(
     session: Annotated[AsyncSession, Depends(get_session)],
 ):
     """Get user's enrollments."""
-    result = await session.execute(
-        select(Enrollment).where(Enrollment.user_id == user_id)
+    query = (
+        select(Enrollment, Training.title)
+        .join(Training, Enrollment.training_id == Training.id)
+        .where(Enrollment.user_id == user_id)
     )
-    enrollments = result.scalars().all()
+    result = await session.execute(query)
+    rows = result.all()
 
     return {
         "items": [
             {
                 "id": str(e.id),
                 "training_id": str(e.training_id),
+                "title": title,
                 "status": e.status.value,
                 "completion_percentage": e.completion_percentage,
                 "is_assigned": e.is_assigned,
             }
-            for e in enrollments
+            for e, title in rows
         ],
-        "total": len(enrollments),
+        "total": len(rows),
     }
 
 

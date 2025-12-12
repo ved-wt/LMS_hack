@@ -395,6 +395,43 @@ async def get_overall_training_statistics(
     }
 
 
+@router.get("/admin/top-learners")
+async def get_top_learners(
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: int = 10,
+):
+    """Get top learners by total learning hours."""
+    query = (
+        select(
+            User.id,
+            User.full_name,
+            Department.name.label("department_name"),
+            func.sum(TrainingCompletion.learning_hours).label("total_hours"),
+            func.count(Badge.id).label("badge_count"),
+        )
+        .join(TrainingCompletion, User.id == TrainingCompletion.user_id)
+        .join(Department, User.department_id == Department.id, isouter=True)
+        .join(Badge, User.id == Badge.user_id, isouter=True)
+        .group_by(User.id, User.full_name, Department.name)
+        .order_by(func.sum(TrainingCompletion.learning_hours).desc())
+        .limit(limit)
+    )
+    
+    result = await session.execute(query)
+    rows = result.all()
+    
+    return [
+        {
+            "user_id": str(row.id),
+            "name": row.full_name,
+            "department": row.department_name or "Unknown",
+            "hours": float(row.total_hours),
+            "badges": row.badge_count
+        }
+        for row in rows
+    ]
+
+
 @router.get("/admin/department-stats")
 async def get_department_statistics(
     session: Annotated[AsyncSession, Depends(get_session)],

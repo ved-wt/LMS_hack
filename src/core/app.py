@@ -31,6 +31,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     # Startup
     init_db()
+    
+    # Create tables (hack for dev)
+    from src.core.db import _engine
+    from sqlmodel import SQLModel
+    # Import all models to ensure they are registered
+    import src.models  # noqa
+    
+    async with _engine.begin() as conn:
+        await conn.run_sync(SQLModel.metadata.create_all)
+        
     print("✓ Database initialized")
 
     start_scheduler()
@@ -139,6 +149,10 @@ def include_routers(app: FastAPI) -> None:
     app.include_router(completions.router, prefix="/api")
     app.include_router(badges.router, prefix="/api")
     app.include_router(reports.router, prefix="/api")
+    
+    from src.api.routes import content, progress
+    app.include_router(content.router, prefix="/api")
+    app.include_router(progress.router, prefix="/api")
 
 
 # Create app instance
