@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     # Application
-    APP_NAME: str = "L&D Portal"
+    APP_NAME: str = "WiseLearn"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     ENVIRONMENT: str = "production"

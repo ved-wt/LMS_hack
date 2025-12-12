@@ -50,7 +50,7 @@ const Profile: React.FC<{ user: CurrentUser }> = ({ user }) => {
               <div class="date">Awarded on ${new Date(cert.issue_date).toLocaleDateString()}</div>
               
               <div class="footer">
-                Certificate ID: ${cert.id} • Verified by L&D Portal
+                Certificate ID: ${cert.id} • Verified by WiseLearn
               </div>
             </div>
             <script>

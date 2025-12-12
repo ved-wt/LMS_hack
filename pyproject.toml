@@ -1,7 +1,7 @@
 [project]
 name = "lms-hack"
 version = "1.0.0"
-description = "L&D Portal MVP - Learning & Development Management System"
+description = "WiseLearn - Learning & Development Management System"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -133,6 +133,7 @@ async def seed_users(
     default_password = hash_password("Password123!")
 
     users_by_role = {
+        "super_admins": [],
         "admins": [],
         "managers": [],
         "employees": [],
@@ -140,14 +141,25 @@ async def seed_users(
 
     # Super Admin
     super_admin = User(
-        email="admin@company.com",
+        email="superadmin@company.com",
         hashed_password=default_password,
         full_name="Super Admin",
         role=UserRole.SUPER_ADMIN,
         department_id=departments[4].id,  # HR
     )
     session.add(super_admin)
-    users_by_role["admins"].append(super_admin)
+    users_by_role["super_admins"].append(super_admin)
+
+    # Admin
+    admin = User(
+        email="admin@company.com",
+        hashed_password=default_password,
+        full_name="Admin User",
+        role=UserRole.ADMIN,
+        department_id=departments[4].id,  # HR
+    )
+    session.add(admin)
+    users_by_role["admins"].append(admin)
 
     # Department Managers
     managers_data = [
@@ -238,7 +250,7 @@ async def seed_users(
 
     total_users = sum(len(users) for users in users_by_role.values())
     print(
-        f"✓ Created {total_users} users (1 admin, {len(users_by_role['managers'])} managers, {len(users_by_role['employees'])} employees)"
+        f"✓ Created {total_users} users (1 super admin, {len(users_by_role['admins'])} admin, {len(users_by_role['managers'])} managers, {len(users_by_role['employees'])} employees)"
     )
 
     return users_by_role
@@ -768,7 +780,7 @@ async def main():
         users_by_role = await seed_users(session, departments)
         await seed_profiles(session, users_by_role)
 
-        admin = users_by_role["admins"][0]
+        admin = users_by_role["super_admins"][0]
         trainings = await seed_trainings(session, admin)
         training_sessions = await seed_training_sessions(session, trainings)
 
@@ -797,7 +809,9 @@ async def main():
         print(f"  • Badges: {len(badges)}")
         print(f"  • Notifications: {len(notifications)}")
         print("\n🔑 Default credentials:")
-        print("  Email: admin@company.com")
+        print("  Super Admin - Email: superadmin@company.com")
+        print("  Admin       - Email: admin@company.com")
+        print("  Manager     - Email: john.smith@company.com")
         print("  Password: Password123!")
         print("  (All users have the same password)")
         print("\n")

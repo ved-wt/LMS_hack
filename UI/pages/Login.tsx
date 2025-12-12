@@ -37,8 +37,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       type="button"
       onClick={() => setSelectedRole(role)}
       className={`p-4 rounded-xl border text-left transition-all duration-200 flex flex-col gap-2 ${selectedRole === role
-          ? 'bg-indigo-50 border-indigo-500 shadow-md ring-1 ring-indigo-500'
-          : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-sm'
+        ? 'bg-indigo-50 border-indigo-500 shadow-md ring-1 ring-indigo-500'
+        : 'bg-white border-slate-200 hover:border-indigo-300 hover:shadow-sm'
         }`}
     >
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${selectedRole === role ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-500'}`}>
@@ -62,7 +62,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
           <h1 className="text-5xl font-bold mb-6">Empower Your Growth Journey</h1>
           <p className="text-slate-300 text-lg leading-relaxed">
-            Access world-class training, track your skills, and advance your career with L&D Horizon's AI-powered learning portal.
+            Access world-class training, track your skills, and advance your career with WiseLearn's AI-powered learning portal.
           </p>
           <div className="mt-12 flex gap-4 text-sm font-medium text-slate-300">
             <div className="flex items-center gap-2">
@@ -87,7 +87,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
-            <div className="grid grid-cols-2 gap-3">
+            {/* <div className="grid grid-cols-2 gap-3">
               <RoleCard
                 role={UserRole.EMPLOYEE}
                 icon={User}
@@ -112,7 +112,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 label="Super Admin"
                 description="Full system control"
               />
-            </div>
+            </div> */}
 
             {error && (
               <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
@@ -178,7 +178,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </form>
 
           <p className="text-center text-xs text-slate-400">
-            &copy; 2025 L&D Horizon. All rights reserved.
+            &copy; 2025 WiseLearn. All rights reserved.
           </p>
         </div>
       </div>

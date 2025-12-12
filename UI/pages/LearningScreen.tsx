@@ -175,8 +175,9 @@ const LearningScreen: React.FC<LearningScreenProps> = ({ user }) => {
 
   // Determine if it is the last lesson to disable the button or show a different state
   const isLastLesson = (() => {
-    if (!training.modules) return true;
+    if (!training.modules || training.modules.length === 0) return true;
     const lastModule = training.modules[training.modules.length - 1];
+    if (!lastModule || !lastModule.lessons || lastModule.lessons.length === 0) return true;
     const lastLesson = lastModule.lessons[lastModule.lessons.length - 1];
     return activeLessonId === lastLesson.id;
   })();

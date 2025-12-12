@@ -69,7 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
       >
         <div className="h-16 flex items-center px-6 border-b border-slate-100">
           <GraduationCap className="w-8 h-8 text-indigo-500 mr-2" />
-          <span className="text-xl font-bold text-slate-900">L&D Horizon</span>
+          <span className="text-xl font-bold text-slate-900">WiseLearn</span>
         </div>
 
         <div className="p-4 space-y-1">
