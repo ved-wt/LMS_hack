@@ -1,0 +1,18 @@
+Full-Stack Tech for L&D MVP
+A Python + PostgreSQL stack optimized for hackathon speed and future growth. Backend with FastAPI, SQLAlchemy/SQLModel, Alembic migrations, JWT auth and RBAC, Celery/APScheduler for jobs, SendGrid/SMTP for email, WeasyPrint for PDFs, Redis for caching/tasks, and Docker Compose for local orchestration. Clean modular layers (API, services, repositories, models, tasks, core, integrations) map directly to the SRS features and endpoints.
+
+Steps
+Select core stack: FastAPI, Uvicorn, SQLModel/SQLAlchemy, Alembic, Pydantic v2.
+Define modules: api, services, repositories, models, tasks, core, integrations under src.
+Implement auth/RBAC: JWT via fastapi-users or custom (PyJWT, passlib), role checks.
+Model schema: entities for Users, Departments, Profiles, Certifications, Trainings, Sessions, Enrollments, Attendance, Completion, Badges, Notifications.
+Wire endpoints by domain: auth, users/profiles, trainings, enrollments, attendance, assignments, badges/certificates, reports, manager, notifications.
+Add workflows: mandatory approval, assignment, attendance rules, completion calculation, badge awarding, certificate generation.
+Add jobs/scheduling: APScheduler (light) or Celery+Redis for reminders, badge checks, expiry alerts.
+Integrations: email (SendGrid/SMTP), PDF (WeasyPrint), storage (local → S3-ready), caching (Redis).
+DevOps: Dockerfile, docker-compose.yml services (api, db, redis, optional worker), .env, GitHub Actions CI (lint, type-check, tests, Docker build).
+Observability: request logging (structlog), optional Prometheus + Grafana, FastAPI docs at /docs and /redoc.
+Further Considerations
+Auth library: Prefer fastapi-users if speed; custom JWT for flexibility.
+Tasks: APScheduler (simpler) vs. Celery (scalable) — choose per timebox.
+Reports: Start with SQL+Pydantic summaries, add caching and export later.
